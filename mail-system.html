@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<!-- Angular / Bootstrap -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+		integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+		integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+		crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+		integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+		crossorigin="anonymous"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js" type="text/javascript"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js" type="text/javascript"></script>
+	<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="Stylesheet"
+		type="text/css" />
+	<link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
+	<!-- Datepicker imports -->
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
+	<!-- Sortable Table -->
+	<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+</head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<body>
+	<div ng-app="MailBox" ng-controller="EmailController as vm">
+		<div class="container-fluid" style="padding-top: 20px;">
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="btn-group">
+						<button id="dateRangeBtnStyling"><input type="text" name="daterange"
+								data-date-format="yyyy/dd/mm" class="form-control btn-date" id="js-date"></button>
+						<input class="subject-search" type="text" id="myInput" onkeyup="subjectSearch()"
+							placeholder="Subject Search"></button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h3 id="emailResultsText"><strong>Results: {{emails.length}} mail(s)</strong></h3>
+		<hr style="margin: 0px;" />
+		<img class="logo" ng-if="!emails" src="https://raw.githubusercontent.com/MichaelGhizzi/logos/master/logo.png">
+
+		<div style="margin-left: 30px; margin-right: 30px;">
+			<table class="col-md-12 col-sm-4 sortable" id="emails" ng-if="emails">
+				<tr id="table-row">
+					<th id="fromHeader">From</th>
+					<th id="toHeader">To</th>
+					<th id="th-spacing"></th>
+					<th id="subjectHeader">Subject</th>
+					<th id="th-spacing"></th>
+					<th id="dateHeader">Date</th>
+				</tr>
+				<tr class="flex-container" ng-repeat="email in emails">
+					<td id="from"><img id="mailMobile" src="https://raw.githubusercontent.com/MichaelGhizzi/logos/master/icon_mail_sp.png">{{ email.from }}
+					</td>
+					<td id="to">{{ email.to }} </td>
+					<td id="replies" class="gray">{{ vm.getReplies(email) }} </td>
+					<td id="subject">{{ email.subject }}</td>
+					<td id="attachment"><img ng-hide="vm.getAttachment(email)" src="https://raw.githubusercontent.com/MichaelGhizzi/logos/master/icon_clip.png"></td>
+					<td id="date">{{ email.date }}</td>
+					<td id="spacing"></td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</body>
+
+</html>
+
+<script>
+	function subjectSearch() {
+		// Declare variables
+		var input, filter, table, tr, td, i, txtValue;
+		input = document.getElementById("myInput");
+		filter = input.value.toUpperCase();
+		table = document.getElementById("emails");
+		tr = table.getElementsByTagName("tr");
+
+		// Loop through all table rows, and hide those who don't match the search query
+		for (i = 0; i < tr.length; i++) {
+			td = tr[i].getElementsByTagName("td")[3];
+			if (td) {
+				txtValue = td.textContent || td.innerText;
+				if (txtValue.toUpperCase().indexOf(filter) > -1) {
+					tr[i].style.display = "";
+				} else {
+					tr[i].style.display = "none";
+				}
+			}
+		}
+	}
+
+	$(function () {
+		$('input[name="daterange"]').daterangepicker({
+			opens: 'left',
+			formatDate: 'yyyy-mm-dd'
+		});
+	});
+
+	var app = angular.module("MailBox", []);
+	app.controller("EmailController", function ($scope) {
+		var vm = this;
+		vm.getAttachment = getAttachment;
+		vm.getReplies = getReplies;
+
+		$scope.emails = [
+			{ from: "aaa@example.com", to: "zzz.zzz@example.com", replyCount: "0", subject: "[ hr-888 ] notice of official announcement", attachment: "false", date: "0:20" },
+			{ from: "bbb.bbbb@example.com", to: "yyy@example.com", replyCount: "0", subject: "[ hr-888 ] notice of official announcement", attachment: "false", date: "0:20" },
+			{ from: "ccc@example.com", to: "xxx@example.com", replyCount: "1", subject: "Happy New Year! Greetings for the New Year.", attachment: "true", date: "0:00" },
+			{ from: "ddd.dddd@example.com", to: "vvv.vvv@example.com", replyCount: "1", subject: "[HR-887(Revised: Office Expansion Project Team)] Notice of office test test", attachment: "false", date: "Jan 01" },
+			{ from: "eee@example.com", to: "sss@example.com", replyCount: "2", subject: "[Github] Logout page", attachment: "false", date: "Jan 01" },
+			{ from: "fff.ffff@example.com ", to: "qqq.qqq@example.com", replyCount: "0", subject: "［dev］ Postfix 3.1.12 / 3.2.9 / 3.3.4 / 3.4.5 ", attachment: "false", date: "Jan 01 " },
+			{ from: "ggg@example.com ", to: "ppp@example.com", replyCount: "0", subject: "Re: [Github] Brush-up on loading animation ", attachment: "false", date: "Jan 01 " },
+			{ from: "hhh.hhh@example.com ", to: "ooo.ooo@example.com", replyCount: "0", subject: "Workplace Summary for sample, Inc.: Jun 2 - Jun 9 ", attachment: "true", date: "Jan 01 " },
+			{ from: "iii@example.com ", to: "nnn@example.com", replyCount: "0", subject: "I love you ", attachment: "true", date: "2019/12/31" },
+			{ from: "Pablo-Diego@example.com ", to: "Pablo-Diego-José-Francisc@example.com", replyCount: "0", subject: "[info:888] ABC EQUIPMENT COMPANY", attachment: "false", date: "2019/12/31" }];
+
+		function getAttachment(email) //If there is an attachment, show icon
+		{
+			if (email.attachment === "true") {
+				return false;
+			}
+			else {
+				return true;
+			}
+
+		}
+
+		function getReplies(email) //If there is a reply, add '+' to table row.
+		{
+			if (email.replyCount > 0) {
+				return " + " + email.replyCount;
+			}
+		}
+	});
+</script>
+
+
+<style>
+	@media only screen and (max-width: 479px) {
+		#fromHeader::after {
+			content: " |";
+		}
+
+		#toHeader::after {
+			content: " |";
+		}
+
+		#subjectHeader::after {
+			content: " |";
+		}
+
+		#date {
+			padding-bottom: 20px !important;
+			padding-left: 275px !important;
+			padding-top: 10px !important;
+			position: absolute;
+			text-align: left;
+		}
+
+		#th-spacing {
+			display: none;
+		}
+
+		#spacing {
+			border-bottom: 1px solid;
+			border-color: black;
+			display: initial !important;
+			padding-bottom: 15px !important;
+			padding-left: 30px;
+			width: 300px !important;
+		}
+
+		#from {
+			font-weight: bold;
+			overflow: visible !important;
+			padding-top: 10px !important;
+			white-space: pre-line;
+			width: 30px !important;
+		}
+
+		#to {
+			overflow: visible !important;
+			padding-left: 15px !important;
+			white-space: pre-line;
+			width: 30px !important;
+		}
+
+		#replies {
+			display: none;
+		}
+
+		#subject {
+			white-space: pre-line;
+			width: 300px !important;
+		}
+
+		#attachment {
+			padding-bottom: 20px !important;
+			padding-left: 200px !important;
+			padding-top: 10px !important;
+			position: absolute;
+			text-align: left;
+		}
+
+		#mailMobile {
+			display: block !important;
+			display: inline !important;
+			padding-right: 5px;
+		}
+
+		.th {
+			display: flex;
+			flex-direction: column;
+			padding: 0px;
+		}
+
+		.flex-container {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.flex-container>tr {
+			background-color: #f1f1f1;
+			text-align: center;
+		}
+
+		td {
+			border-top: 0px !important;
+			max-width: none !important;
+			padding: 0px !important;
+		}
+
+		#sortable {
+			max-width: 50px;
+		}
+
+	}
+
+	.dateRangeBtnStyling {
+		border-bottom-left-radius: 10px;
+		border-top-left-radius: 10px;
+		padding-left: 10px;
+	}
+
+	.btn-date {
+		background: url(https://raw.githubusercontent.com/MichaelGhizzi/logos/master/icon_calender.png) no-repeat scroll 7px;
+		font-size: 14px;
+		margin: 5px 0;
+		padding-left: 35px;
+	}
+
+	.btn-group button {
+		background-color: #D9D9D9;
+		border-color: gray;
+		border: 1px solid;
+		color: white;
+		cursor: pointer;
+		float: left;
+	}
+
+	.btn-group button:not(:last-child) {
+		border-right: none;
+	}
+
+	.logo {
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		margin-top: 150px;
+	}
+
+	.inline-block {
+		display: inline-block;
+	}
+
+	#emails {
+		border-collapse: collapse;
+		font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+		table-layout: fixed;
+		width: 100%;
+	}
+
+	#emails td,
+	#emails th {
+		border-color: lightgray;
+		border-top: .5px solid;
+		padding: 8px;
+	}
+
+	#emails tr:hover {
+		background-color: #F6F8FA;
+		color: black;
+		color: blue;
+		cursor: pointer;
+	}
+
+	#emails th {
+		padding-bottom: 12px;
+		padding-top: 12px;
+		text-align: left;
+	}
+
+	#emailResultsText {
+		padding-left: 20px;
+		padding-top: 20px;
+	}
+
+	#mobileFrom {
+		overflow: hidden;
+	}
+
+	.subject-search {
+		border-bottom-right-radius: 10px;
+		border-color: gray;
+		border-top-right-radius: 10px;
+		padding-left: 10px;
+	}
+
+	#mailMobile {
+		display: none;
+	}
+
+	#from {
+		max-width: 13px !important;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	#to {
+		max-width: 13px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	#replies {
+		text-align: center;
+	}
+
+	#spacing {
+		display: none;
+	}
+
+	#subject {
+		max-width: 62px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	#attachment {
+		text-align: center;
+	}
+
+	#table-row {
+		background-color: #F5F5F5;
+	}
+</style>

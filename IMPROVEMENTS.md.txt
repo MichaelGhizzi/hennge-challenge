@@ -1,0 +1,8 @@
+UI that can be approved:
+
+1. Add a column to show if an email has been read or not. If this is an admin system, an easy way of doing this would be to attach a 1x1 transparent pixel inside each email, and call an API when the email is opened to get that 1x1 pixel image.
+2. Allow searching by Email and Body, not just Subject.
+3. Have all dates be in the same format to avoid user confusion.
+4. Date Time picker instead of just a date picker. Some companies have thousands of emails going out every hour. This would help find specific emails in the system without having to go through the database.
+5. Allow the entire table to be striped with colors. Having the entire table white is sore on the eyes and can be rather bland to look at.
+6. Allow emails to be seperated into different folders for easier sorting.
